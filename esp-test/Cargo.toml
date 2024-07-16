@@ -15,12 +15,7 @@ esp-backtrace = { version = "0.12.2", features = [
 esp-hal = { version = "0.19.0", features = [ "esp32s3" ] }
 esp-println = { version = "0.10.0", default-features = false, features = ["esp32s3", "critical-section", "colors", "log", "jtag-serial"] }
 log = { version = "0.4.22" }
-esp-wifi = { version = "0.7.0", features = [
-    "esp32s3",
-    "phy-enable-usb",
-    "utils",
-    "wifi",
-] }
+esp-wifi = { version = "0.7.0", features = ["esp32s3", "phy-enable-usb", "utils", "wifi", "wifi-default"] }
 heapless = { version = "0.8.0", default-features = false }
 smoltcp = { version = "0.11.0", default-features = false, features = [
     "medium-ethernet",
