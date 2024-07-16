@@ -1,0 +1,56 @@
+[package]
+name = "esp-test"
+version = "0.1.0"
+authors = ["filipton <filipton12@gmail.com>"]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+esp-backtrace = { version = "0.12.2", features = [
+    "esp32s3",
+    "exception-handler",
+    "panic-handler",
+    "println",
+] }
+esp-hal = { version = "0.19.0", features = [ "esp32s3" ] }
+esp-println = { version = "0.10.0", default-features = false, features = ["esp32s3", "critical-section", "colors", "log", "jtag-serial"] }
+log = { version = "0.4.22" }
+esp-wifi = { version = "0.7.0", features = [
+    "esp32s3",
+    "phy-enable-usb",
+    "utils",
+    "wifi",
+] }
+heapless = { version = "0.8.0", default-features = false }
+smoltcp = { version = "0.11.0", default-features = false, features = [
+    "medium-ethernet",
+    "proto-dhcpv4",
+    "proto-igmp",
+    "proto-ipv4",
+    "socket-dhcpv4",
+    "socket-icmp",
+    "socket-raw",
+    "socket-tcp",
+    "socket-udp",
+] }
+
+[patch.crates-io]
+esp-backtrace = { git = "https://github.com/esp-rs/esp-hal.git", rev = "31a135c0f14e0896be6db3ed439ce2294c2ade69", package = "esp-backtrace" } 
+esp-println = { git = "https://github.com/esp-rs/esp-hal.git", rev = "31a135c0f14e0896be6db3ed439ce2294c2ade69", package = "esp-println" } 
+
+[build-dependencies]
+dotenvy = "0.15.7"
+
+[profile.dev]
+# Rust debug is too slow.
+# For debug builds always builds with some optimization
+opt-level = "s"
+
+[profile.release]
+codegen-units = 1 # LLVM can perform better optimizations using a single thread
+debug = 2
+debug-assertions = false
+incremental = false
+lto = 'fat'
+opt-level = 's'
+overflow-checks = false
