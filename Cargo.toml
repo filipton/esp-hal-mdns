@@ -4,3 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+dns-parser = "0.8.0"
+net2 = "0.2.39"
+socket2 = { version = "0.5.7", features = ["all"] }
