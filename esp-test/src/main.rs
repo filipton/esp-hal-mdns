@@ -108,20 +108,71 @@ fn main() -> ! {
         sock.join_multicast_group(MULTICAST_ADDR)
     );
 
-    /*
+    let query = "_stackmat._tcp.local";
+    let mut questions = [
+        dns_protocol::Question::new(query, dns_protocol::ResourceType::Ptr, 1 | 0x8000), //1-IN
+                                                                                         //0x8000 - prefer unicast
+    ];
+
+    let msg = dns_protocol::Message::new(
+        0,
+        *dns_protocol::Flags::default().set_recursive(false),
+        &mut questions,
+        &mut [],
+        &mut [],
+        &mut [],
+    );
+
+    let mut buf = [0; 1024];
+    let n = msg.write(&mut buf).unwrap();
+
+    wifi_stack.work();
+    sock.work();
     log::info!(
         "sock.send: {:?}",
-        sock.send(MULTICAST_ADDR, 5353, &[69; 420])
+        sock.send(MULTICAST_ADDR, 5353, &buf[..n])
     );
-    */
 
     let mut data_buf = [0; 4096];
     loop {
         wifi_stack.work();
         sock.work();
         let res = sock.receive(&mut data_buf);
-        if let Ok(res) = res {
-            log::info!("sock.receive res: {res:?}");
+        if let Ok((n, _addr, _port)) = res {
+            let mut answers = [dns_protocol::ResourceRecord::default(); 16];
+            let mut additional = [dns_protocol::ResourceRecord::default(); 16];
+
+            let res = dns_protocol::Message::read(
+                &data_buf[..n],
+                &mut [],
+                &mut answers,
+                &mut [],
+                &mut additional,
+            );
+
+            if let Ok(res) = res {
+                if res.answers().len() > 0 {
+                    let mut segments = res.answers()[0].name().segments();
+                    let mut is_ans = true;
+
+                    for seg in query.split(".") {
+                        if let Some(segment) = segments.next() {
+                            if let dns_protocol::LabelSegment::String(segment) = segment {
+                                if seg == segment {
+                                    continue;
+                                }
+                            }
+                        }
+
+                        is_ans = false;
+                        break;
+                    }
+
+                    if is_ans {
+                        log::info!("{:?}", res.additional());
+                    }
+                }
+            }
         }
 
         delay.delay(50.millis());
