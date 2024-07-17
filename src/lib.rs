@@ -1,5 +1,7 @@
 #![no_std]
 
+use dns_protocol::ResourceType;
+
 const MDNS_BUF_SIZE: usize = 4096;
 
 pub struct MdnsQuery<'a> {
@@ -80,6 +82,35 @@ impl<'a> MdnsQuery<'a> {
 
                 if is_ans {
                     log::info!("{:?}", res.additional());
+
+                    for add in res.additional() {
+                        if add.ty() == ResourceType::Txt {
+                            let data = add.data();
+                            let mut offset = 0;
+                            loop {
+                                if offset >= data.len() {
+                                    break;
+                                }
+
+                                let len = data[offset] as usize;
+                                offset += 1;
+
+                                let mut splitted =
+                                    data[offset..offset + len].splitn(2, |&x| x == 0x3d);
+                                while let Some(split) = splitted.next() {
+                                    log::info!("SPLIT: {:?}", core::str::from_utf8(split));
+                                }
+
+                                offset += len;
+                            }
+                        } else if add.ty() == ResourceType::Srv {
+                            let port = u16::from_be_bytes(add.data()[4..6].try_into().unwrap());
+                            log::info!("port: {port}");
+                        } else if add.ty() == ResourceType::A {
+                            let ip = &add.data()[0..4];
+                            log::info!("ip: {ip:?}");
+                        }
+                    }
                     return true;
                 }
             }
