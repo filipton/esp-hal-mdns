@@ -6,7 +6,7 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-esp-backtrace = { version = "0.12.2", features = [
+esp-backtrace = { version = "0.13.0", features = [
     "esp32s3",
     "exception-handler",
     "panic-handler",
@@ -28,11 +28,8 @@ smoltcp = { version = "0.11.0", default-features = false, features = [
     "socket-tcp",
     "socket-udp",
 ] }
+esp-hal-mdns = { path = "../" }
 dns-protocol = { version = "0.1.2", default-features = false }
-
-[patch.crates-io]
-esp-backtrace = { git = "https://github.com/esp-rs/esp-hal.git", rev = "31a135c0f14e0896be6db3ed439ce2294c2ade69", package = "esp-backtrace" } 
-esp-println = { git = "https://github.com/esp-rs/esp-hal.git", rev = "31a135c0f14e0896be6db3ed439ce2294c2ade69", package = "esp-println" } 
 
 [build-dependencies]
 dotenvy = "0.15.7"

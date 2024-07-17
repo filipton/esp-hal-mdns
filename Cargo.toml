@@ -1,8 +1,14 @@
 [package]
-name = "rust-mdns"
+name = "esp-hal-mdns"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+
 [dependencies]
 dns-protocol = { version = "0.1.2", default-features = false }
-socket2 = { version = "0.5.7", features = ["all"] }
+log = { version = "0.4.22", default-features = false }
+#socket2 = { version = "0.5.7", features = ["all"] }
+
+[features]
+default = []

@@ -5,6 +5,7 @@ use esp_backtrace as _;
 use esp_hal::{
     clock::ClockControl, delay::Delay, peripherals::Peripherals, prelude::*, system::SystemControl,
 };
+use esp_hal_mdns::MdnsQuery;
 use esp_wifi::{
     current_millis,
     wifi::{AccessPointInfo, ClientConfiguration, Configuration, WifiError, WifiStaDevice},
@@ -108,76 +109,25 @@ fn main() -> ! {
         sock.join_multicast_group(MULTICAST_ADDR)
     );
 
-    let query = "_stackmat._tcp.local";
-    let mut questions = [
-        dns_protocol::Question::new(query, dns_protocol::ResourceType::Ptr, 1 | 0x8000), //1-IN
-                                                                                         //0x8000 - prefer unicast
-    ];
+    let mut mdns = MdnsQuery::new("_stackmat._tcp.local", 2500, esp_wifi::current_millis);
 
-    let msg = dns_protocol::Message::new(
-        0,
-        *dns_protocol::Flags::default().set_recursive(false),
-        &mut questions,
-        &mut [],
-        &mut [],
-        &mut [],
-    );
-
-    let mut buf = [0; 1024];
-    let n = msg.write(&mut buf).unwrap();
-    let buf = &buf[..n];
-
-    let mut last_sent = 0;
     let mut data_buf = [0; 4096];
     loop {
         wifi_stack.work();
         sock.work();
 
-        if current_millis() - last_sent > 2500 {
-            log::info!("sock.send: {:?}", sock.send(MULTICAST_ADDR, 5353, &buf));
-            last_sent = current_millis();
+        if let Some(data) = mdns.should_send_mdns_packet() {
+            log::info!("sock.send: {:?}", sock.send(MULTICAST_ADDR, 5353, &data));
         }
 
         let res = sock.receive(&mut data_buf);
         if let Ok((n, _addr, _port)) = res {
-            let mut answers = [dns_protocol::ResourceRecord::default(); 16];
-            let mut additional = [dns_protocol::ResourceRecord::default(); 16];
-
-            let res = dns_protocol::Message::read(
-                &data_buf[..n],
-                &mut [],
-                &mut answers,
-                &mut [],
-                &mut additional,
-            );
-
-            if let Ok(res) = res {
-                if res.answers().len() > 0 && res.additional().len() > 0 {
-                    let mut segments = res.answers()[0].name().segments();
-                    let mut is_ans = true;
-
-                    for seg in query.split(".") {
-                        if let Some(segment) = segments.next() {
-                            if let dns_protocol::LabelSegment::String(segment) = segment {
-                                if seg == segment {
-                                    continue;
-                                }
-                            }
-                        }
-
-                        is_ans = false;
-                        break;
-                    }
-
-                    if is_ans {
-                        log::info!("{:?}", res.additional());
-                        break;
-                    }
-                }
+            if mdns.parse_mdns_response(&data_buf[..n]) {
+                break;
             }
         }
 
-        delay.delay(50.millis());
+        //delay.delay(50.millis());
     }
 
     loop {

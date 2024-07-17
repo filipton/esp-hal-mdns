@@ -287,10 +287,11 @@ checksum = "5443807d6dff69373d433ab9ef5378ad8df50ca6298caf15de6e52e24aaf54d5"
 
 [[package]]
 name = "esp-backtrace"
-version = "0.12.2"
-source = "git+https://github.com/esp-rs/esp-hal.git?rev=31a135c0f14e0896be6db3ed439ce2294c2ade69#31a135c0f14e0896be6db3ed439ce2294c2ade69"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1a34817530dceba397172d6a9fb660b684a73a3a591fbe7fb0da27bed796f270"
 dependencies = [
- "esp-build 0.1.0 (git+https://github.com/esp-rs/esp-hal.git?rev=31a135c0f14e0896be6db3ed439ce2294c2ade69)",
+ "esp-build",
  "esp-println",
  "semihosting",
 ]
@@ -300,16 +301,6 @@ name = "esp-build"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b94a4b8d74e7cc7baabcca5b2277b41877e039ad9cd49959d48ef94dac7eab4b"
-dependencies = [
- "quote",
- "syn 2.0.71",
- "termcolor",
-]
-
-[[package]]
-name = "esp-build"
-version = "0.1.0"
-source = "git+https://github.com/esp-rs/esp-hal.git?rev=31a135c0f14e0896be6db3ed439ce2294c2ade69#31a135c0f14e0896be6db3ed439ce2294c2ade69"
 dependencies = [
  "quote",
  "syn 2.0.71",
@@ -335,7 +326,7 @@ dependencies = [
  "embedded-hal 1.0.0",
  "embedded-hal-nb",
  "enumset",
- "esp-build 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "esp-build",
  "esp-hal-procmacros",
  "esp-metadata",
  "esp-riscv-rt",
@@ -365,10 +356,18 @@ dependencies = [
  "critical-section",
  "document-features",
  "embassy-time-driver",
- "esp-build 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "esp-build",
  "esp-hal",
  "esp-metadata",
  "portable-atomic",
+]
+
+[[package]]
+name = "esp-hal-mdns"
+version = "0.1.0"
+dependencies = [
+ "dns-protocol",
+ "log",
 ]
 
 [[package]]
@@ -403,10 +402,11 @@ dependencies = [
 [[package]]
 name = "esp-println"
 version = "0.10.0"
-source = "git+https://github.com/esp-rs/esp-hal.git?rev=31a135c0f14e0896be6db3ed439ce2294c2ade69#31a135c0f14e0896be6db3ed439ce2294c2ade69"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "58cd4fa834980ba64aad00a5c2c1a630020af984eadef65a125cb99085f6f54c"
 dependencies = [
  "critical-section",
- "esp-build 0.1.0 (git+https://github.com/esp-rs/esp-hal.git?rev=31a135c0f14e0896be6db3ed439ce2294c2ade69)",
+ "esp-build",
  "log",
  "portable-atomic",
 ]
@@ -443,6 +443,7 @@ dependencies = [
  "dotenvy",
  "esp-backtrace",
  "esp-hal",
+ "esp-hal-mdns",
  "esp-println",
  "esp-wifi",
  "heapless",
@@ -461,7 +462,7 @@ dependencies = [
  "critical-section",
  "embedded-io",
  "enumset",
- "esp-build 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "esp-build",
  "esp-hal",
  "esp-hal-embassy",
  "esp-wifi-sys",
