@@ -125,18 +125,19 @@ fn main() -> ! {
 
     let mut buf = [0; 1024];
     let n = msg.write(&mut buf).unwrap();
+    let buf = &buf[..n];
 
-    wifi_stack.work();
-    sock.work();
-    log::info!(
-        "sock.send: {:?}",
-        sock.send(MULTICAST_ADDR, 5353, &buf[..n])
-    );
-
+    let mut last_sent = 0;
     let mut data_buf = [0; 4096];
     loop {
         wifi_stack.work();
         sock.work();
+
+        if current_millis() - last_sent > 2500 {
+            log::info!("sock.send: {:?}", sock.send(MULTICAST_ADDR, 5353, &buf));
+            last_sent = current_millis();
+        }
+
         let res = sock.receive(&mut data_buf);
         if let Ok((n, _addr, _port)) = res {
             let mut answers = [dns_protocol::ResourceRecord::default(); 16];
@@ -151,7 +152,7 @@ fn main() -> ! {
             );
 
             if let Ok(res) = res {
-                if res.answers().len() > 0 {
+                if res.answers().len() > 0 && res.additional().len() > 0 {
                     let mut segments = res.answers()[0].name().segments();
                     let mut is_ans = true;
 
@@ -170,11 +171,17 @@ fn main() -> ! {
 
                     if is_ans {
                         log::info!("{:?}", res.additional());
+                        break;
                     }
                 }
             }
         }
 
         delay.delay(50.millis());
+    }
+
+    loop {
+        log::info!("Hello world!");
+        delay.delay(500.millis());
     }
 }
