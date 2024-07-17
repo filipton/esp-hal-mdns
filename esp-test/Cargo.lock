@@ -367,6 +367,7 @@ name = "esp-hal-mdns"
 version = "0.1.0"
 dependencies = [
  "dns-protocol",
+ "heapless",
  "log",
 ]
 

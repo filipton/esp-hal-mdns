@@ -122,7 +122,10 @@ fn main() -> ! {
 
         let res = sock.receive(&mut data_buf);
         if let Ok((n, _addr, _port)) = res {
-            if mdns.parse_mdns_response(&data_buf[..n]) {
+            let resp = mdns.parse_mdns_txt(&data_buf[..n], "ws");
+            log::info!("{resp:?}");
+
+            if resp.is_some() {
                 break;
             }
         }
