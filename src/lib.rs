@@ -145,9 +145,6 @@ impl<'a> MdnsQuery<'a> {
                         if add.ty() == ResourceType::Srv {
                             let port = u16::from_be_bytes(add.data()[4..6].try_into().unwrap());
                             return Some(port);
-                        } else if add.ty() == ResourceType::A {
-                            let ip = &add.data()[0..4];
-                            log::info!("ip: {ip:?}");
                         }
                     }
                 }
