@@ -148,6 +148,8 @@ async fn main(spawner: Spawner) -> ! {
     }
 
     _ = stack.leave_multicast_group(ip_addr).await;
+    sock.close();
+    drop(sock);
 
     loop {
         Timer::after(Duration::from_millis(1_000)).await;
