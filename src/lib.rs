@@ -55,7 +55,15 @@ impl<'a> MdnsQuery<'a> {
         None
     }
 
-    pub fn parse_mdns_txt(&mut self, data: &[u8], key: &str) -> Option<heapless::String<255>> {
+    pub fn parse_mdns_query(
+        &mut self,
+        data: &[u8],
+        key: Option<&str>,
+    ) -> ([u8; 4], u16, Option<heapless::String<255>>) {
+        let mut tmp_txt = None;
+        let mut tmp_ip = [0; 4];
+        let mut tmp_port = 0;
+
         let mut answers = [ResourceRecord::default(); 16];
         let mut additional = [ResourceRecord::default(); 16];
 
@@ -98,97 +106,29 @@ impl<'a> MdnsQuery<'a> {
                                 let sp_key = splitted.next().unwrap_or(&[]);
                                 let sp_value = splitted.next().unwrap_or(&[]);
 
-                                if key.as_bytes() == sp_key {
-                                    let value = core::str::from_utf8(sp_value).unwrap_or("");
-                                    return Some(
-                                        value.try_into().unwrap_or(heapless::String::new()),
-                                    );
+                                if let Some(key) = key {
+                                    if key.as_bytes() == sp_key {
+                                        let value = core::str::from_utf8(sp_value).unwrap_or("");
+                                        tmp_txt = Some(
+                                            value.try_into().unwrap_or(heapless::String::new()),
+                                        );
+                                    }
                                 }
 
                                 offset += len;
                             }
-                        }
-                    }
-                }
-            }
-        }
-
-        None
-    }
-
-    pub fn parse_mdns_port(&mut self, data: &[u8]) -> Option<u16> {
-        let mut answers = [ResourceRecord::default(); 16];
-        let mut additional = [ResourceRecord::default(); 16];
-
-        let res = Message::read(&data, &mut [], &mut answers, &mut [], &mut additional);
-
-        if let Ok(res) = res {
-            if res.answers().len() > 0 && res.additional().len() > 0 {
-                let mut segments = res.answers()[0].name().segments();
-                let mut is_ans = true;
-
-                for seg in self.query_str.split(".") {
-                    if let Some(segment) = segments.next() {
-                        if let LabelSegment::String(segment) = segment {
-                            if seg == segment {
-                                continue;
-                            }
-                        }
-                    }
-
-                    is_ans = false;
-                    break;
-                }
-
-                if is_ans {
-                    for add in res.additional() {
-                        if add.ty() == ResourceType::Srv {
+                        } else if add.ty() == ResourceType::Srv {
                             let port = u16::from_be_bytes(add.data()[4..6].try_into().unwrap());
-                            return Some(port);
+                            tmp_port = port;
+                        } else if add.ty() == ResourceType::A {
+                            let ip = add.data()[0..4].try_into().unwrap_or([0; 4]);
+                            tmp_ip = ip;
                         }
                     }
                 }
             }
         }
 
-        None
-    }
-
-    pub fn parse_mdns_ip(&mut self, data: &[u8]) -> Option<[u8; 4]> {
-        let mut answers = [ResourceRecord::default(); 16];
-        let mut additional = [ResourceRecord::default(); 16];
-
-        let res = Message::read(&data, &mut [], &mut answers, &mut [], &mut additional);
-
-        if let Ok(res) = res {
-            if res.answers().len() > 0 && res.additional().len() > 0 {
-                let mut segments = res.answers()[0].name().segments();
-                let mut is_ans = true;
-
-                for seg in self.query_str.split(".") {
-                    if let Some(segment) = segments.next() {
-                        if let LabelSegment::String(segment) = segment {
-                            if seg == segment {
-                                continue;
-                            }
-                        }
-                    }
-
-                    is_ans = false;
-                    break;
-                }
-
-                if is_ans {
-                    for add in res.additional() {
-                        if add.ty() == ResourceType::A {
-                            let ip = &add.data()[0..4];
-                            return Some(ip.try_into().unwrap_or([0; 4]));
-                        }
-                    }
-                }
-            }
-        }
-
-        None
+        (tmp_ip, tmp_port, tmp_txt)
     }
 }

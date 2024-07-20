@@ -135,10 +135,10 @@ async fn main(spawner: Spawner) -> ! {
         if sock.may_recv() {
             let res = sock.recv_from(&mut data_buf).await;
             if let Ok((n, _endpoint)) = res {
-                let resp = mdns.parse_mdns_txt(&data_buf[..n], "ws");
+                let resp = mdns.parse_mdns_query(&data_buf[..n], Some("ws"));
                 log::info!("{resp:?}");
 
-                if resp.is_some() {
+                if resp.2.is_some() {
                     break;
                 }
             }
