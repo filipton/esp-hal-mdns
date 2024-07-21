@@ -24,6 +24,10 @@ use esp_wifi::wifi::{
 const SSID: &str = env!("SSID");
 const PASSWORD: &str = env!("PASSWORD");
 
+const MDNS_IP: IpAddress = IpAddress::v4(224, 0, 0, 251);
+const MDNS_PORT: u16 = 5353;
+const MDNS_ENDPOINT: IpEndpoint = IpEndpoint::new(MDNS_IP, MDNS_PORT);
+
 macro_rules! mk_static {
     ($t:ty,$val:expr) => {{
         static STATIC_CELL: static_cell::StaticCell<$t> = static_cell::StaticCell::new();
@@ -115,13 +119,10 @@ async fn main(spawner: Spawner) -> ! {
         &mut tx_buffer,
     );
 
-    let ip_addr = IpAddress::v4(224, 0, 0, 251);
-    let ip_endpoint: IpEndpoint = IpEndpoint::new(ip_addr, 5353);
-
-    log::info!("sock.bind(5353) res: {:?}", sock.bind(5353));
+    log::info!("sock.bind(5353) res: {:?}", sock.bind(MDNS_PORT));
     log::info!(
         "multicast_res: {:?}",
-        stack.join_multicast_group(ip_addr).await
+        stack.join_multicast_group(MDNS_IP).await
     );
 
     let mut mdns = MdnsQuery::new("_stackmat._tcp.local", 2500, esp_wifi::current_millis);
@@ -129,7 +130,7 @@ async fn main(spawner: Spawner) -> ! {
     let mut data_buf = [0; 4096];
     loop {
         if let Some(data) = mdns.should_send_mdns_packet() {
-            log::info!("sock.send: {:?}", sock.send_to(&data, ip_endpoint).await);
+            log::info!("sock.send: {:?}", sock.send_to(&data, MDNS_ENDPOINT).await);
         }
 
         if sock.may_recv() {
@@ -147,7 +148,7 @@ async fn main(spawner: Spawner) -> ! {
         Timer::after(Duration::from_millis(50)).await;
     }
 
-    _ = stack.leave_multicast_group(ip_addr).await;
+    _ = stack.leave_multicast_group(MDNS_IP).await;
     sock.close();
     drop(sock);
 
