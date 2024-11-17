@@ -2,6 +2,9 @@
 name = "esp-hal-mdns"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+description = "Simple mdns lookup stack for esp-hal"
+repository = "https://github.com/filipton/esp-hal-mdns"
 
 [lib]
 
