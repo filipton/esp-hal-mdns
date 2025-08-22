@@ -1,6 +1,6 @@
 [package]
 name = "esp-hal-mdns"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 license = "MIT"
 description = "Simple mdns lookup stack for esp-hal"
@@ -10,8 +10,8 @@ repository = "https://github.com/filipton/esp-hal-mdns"
 
 [dependencies]
 dns-protocol = { version = "0.1.2", default-features = false }
-heapless = { version = "0.8.0", default-features = false }
-log = { version = "0.4.22", default-features = false }
+heapless = { version = "0.9.1", default-features = false }
+log = { version = "0.4.27", default-features = false }
 #socket2 = { version = "0.5.7", features = ["all"] }
 
 [features]
